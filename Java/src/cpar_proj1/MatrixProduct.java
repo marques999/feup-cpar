@@ -35,12 +35,12 @@ public class MatrixProduct
 					System.out.print("Dimensions: lins cols ? ");
 
 					final String[] tokens = scanner.nextLine().split(" ");
-					
+
 					try
 					{
 						int numberLines = Integer.parseInt(tokens[0]);
 						int numberColumns = Integer.parseInt(tokens[1]);
-						
+
 						if (tokens.length == 2)
 						{
 							switch (userChoice)
@@ -60,10 +60,10 @@ public class MatrixProduct
 							}
 						}
 					}
-					catch (NumberFormatException ex)
+					catch (final NumberFormatException ex)
 					{
 						System.out.println("Error: non-numeric input is unsupported, try again.");
-						userChoice = 1;	
+						userChoice = 1;
 					}
 				}
 				else
@@ -72,13 +72,11 @@ public class MatrixProduct
 					userChoice = 1;
 				}
 			}
-			catch (NumberFormatException ex)
+			catch (final NumberFormatException ex)
 			{
 				System.out.println("Error: non-numeric input is unsupported, try again.");
 				userChoice = 1;
 			}
 		} while (userChoice != 0);
-
-		System.out.println();
 	}
 }
