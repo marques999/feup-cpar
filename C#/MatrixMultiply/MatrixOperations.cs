@@ -2,7 +2,7 @@
 using System.Diagnostics;
 using System.Threading.Tasks;
 
-class Matrix
+class MatrixOperations
 {
     private double[][] InitializeMatrixA(int sz)
     {
@@ -62,21 +62,21 @@ class Matrix
         Console.WriteLine("\n");
     }
 
-    public void Multiply(int aRows, int bRows)
+    public void Multiply(int mRows, int mColumns)
     {
-        double[][] pha = InitializeMatrixA(aRows);
-        double[][] phb = InitializeMatrixB(bRows);
-        double[][] phc = InitializeMatrixC(aRows);
+        double[][] pha = InitializeMatrixA(mRows);
+        double[][] phb = InitializeMatrixB(mColumns);
+        double[][] phc = InitializeMatrixC(mRows);
 
         var stopWatch = Stopwatch.StartNew();
 
-        for (int i = 0; i < aRows; i++)
+        for (int i = 0; i < mRows; i++)
         {
-            for (int j = 0; j < bRows; j++)
+            for (int j = 0; j < mColumns; j++)
             {
                 double sumValue = 0;
 
-                for (int k = 0; k < aRows; k++)
+                for (int k = 0; k < mRows; k++)
                 {
                     sumValue += pha[i][k] * phb[k][j];
                 }
@@ -86,22 +86,22 @@ class Matrix
         }
 
         stopWatch.Stop();
-        PrintMatrix(phc, bRows, stopWatch);
+        PrintMatrix(phc, mColumns, stopWatch);
     }
 
-    public void MultiplyLine(int aRows, int bRows)
+    public void MultiplyLine(int mRows, int mColumns)
     {
-        double[][] pha = InitializeMatrixA(aRows);
-        double[][] phb = InitializeMatrixB(bRows);
-        double[][] phc = InitializeMatrixC(aRows);
+        double[][] pha = InitializeMatrixA(mRows);
+        double[][] phb = InitializeMatrixB(mColumns);
+        double[][] phc = InitializeMatrixC(mRows);
 
         var stopWatch = Stopwatch.StartNew();
 
-        for (int i = 0; i < aRows; i++)
+        for (int i = 0; i < mRows; i++)
         {
-            for (int j = 0; j < bRows; j++)
+            for (int j = 0; j < mColumns; j++)
             {
-                for (int k = 0; k < aRows; k++)
+                for (int k = 0; k < mRows; k++)
                 {
                     phc[i][k] += pha[i][j] * phb[j][k];
                 }
@@ -109,24 +109,24 @@ class Matrix
         }
 
         stopWatch.Stop();
-        PrintMatrix(phc, bRows, stopWatch);
+        PrintMatrix(phc, mColumns, stopWatch);
     }
 
-    public void MultiplyParallel(int aRows, int bRows)
+    public void MultiplyParallel(int mRows, int mColumns)
     {
-        double[][] pha = InitializeMatrixA(aRows);
-        double[][] phb = InitializeMatrixB(bRows);
-        double[][] phc = InitializeMatrixC(aRows);
+        double[][] pha = InitializeMatrixA(mRows);
+        double[][] phb = InitializeMatrixB(mColumns);
+        double[][] phc = InitializeMatrixC(mRows);
 
         var stopWatch = Stopwatch.StartNew();
 
-        Parallel.For(0, aRows, i =>
+        Parallel.For(0, mRows, i =>
         {
-            for (int j = 0; j < bRows; j++)
+            for (int j = 0; j < mColumns; j++)
             {
                 double sumValue = 0;
 
-                for (int k = 0; k < aRows; k++)
+                for (int k = 0; k < mRows; k++)
                 {
                     sumValue += pha[i][k] * phb[k][j];
                 }
@@ -136,22 +136,22 @@ class Matrix
         });
 
         stopWatch.Stop();
-        PrintMatrix(phc, bRows, stopWatch);
+        PrintMatrix(phc, mColumns, stopWatch);
     }
 
-    public void MultiplyLineParallel(int aRows, int bRows)
+    public void MultiplyLineParallel(int mRows, int mColumns)
     {
-        double[][] pha = InitializeMatrixA(aRows);
-        double[][] phb = InitializeMatrixB(bRows);
-        double[][] phc = InitializeMatrixC(aRows);
+        double[][] pha = InitializeMatrixA(mRows);
+        double[][] phb = InitializeMatrixB(mColumns);
+        double[][] phc = InitializeMatrixC(mRows);
 
         var stopWatch = Stopwatch.StartNew();
 
-        Parallel.For(0, aRows, i =>
+        Parallel.For(0, mRows, i =>
         {
-            for (int j = 0; j < bRows; j++)
+            for (int j = 0; j < mColumns; j++)
             {
-                for (int k = 0; k < aRows; k++)
+                for (int k = 0; k < mRows; k++)
                 {
                     phc[i][k] += pha[i][j] * phb[j][k];
                 }
@@ -159,6 +159,6 @@ class Matrix
         });
 
         stopWatch.Stop();
-        PrintMatrix(phc, bRows, stopWatch);
+        PrintMatrix(phc, mColumns, stopWatch);
     }
 }
