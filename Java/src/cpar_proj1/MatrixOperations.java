@@ -6,15 +6,15 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-public class Matrix
+public class MatrixOperations
 {
-	private double[][] initializeMatrixA(int sz)
+	private static double[][] initializeMatrixA(int mRows, int mColumns)
 	{
-		double[][] m = new double[sz][sz];
+		double[][] m = new double[mRows][mColumns];
 
-		for (int i = 0; i < sz; i++)
+		for (int i = 0; i < mRows; i++)
 		{
-			for (int j = 0; j < sz; j++)
+			for (int j = 0; j < mColumns; j++)
 			{
 				m[i][j] = 1.0;
 			}
@@ -23,13 +23,13 @@ public class Matrix
 		return m;
 	}
 
-	private double[][] initializeMatrixB(int sz)
+	private static double[][] initializeMatrixB(int mRows, int mColumns)
 	{
-		double[][] m = new double[sz][sz];
+		double[][] m = new double[mRows][mColumns];
 
-		for (int i = 0; i < sz; i++)
+		for (int i = 0; i < mRows; i++)
 		{
-			for (int j = 0; j < sz; j++)
+			for (int j = 0; j < mColumns; j++)
 			{
 				m[i][j] = i + 1;
 			}
@@ -38,7 +38,7 @@ public class Matrix
 		return m;
 	}
 
-	private void PrintMatrix(double[][] matrix, int sz, long elapsedTime)
+	private static void PrintMatrix(double[][] matrix, int sz, long elapsedTime)
 	{
 		System.out.format("Time: %3.3f seconds\n", elapsedTime / 1000.0);
 
@@ -50,21 +50,21 @@ public class Matrix
 		System.out.println("\n");
 	}
 
-	public void Multiply(int aRows, int bRows)
+	public static void Multiply(int mRows, int mColumns)
 	{
-		double[][] pha = initializeMatrixA(aRows);
-		double[][] phb = initializeMatrixB(bRows);
-		double[][] phc = new double[aRows][aRows];
+		double[][] pha = initializeMatrixA(mRows, mColumns);
+		double[][] phb = initializeMatrixB(mColumns, mRows);
+		double[][] phc = new double[mRows][mRows];
 
 		long start = System.currentTimeMillis();
 
-		for (int i = 0; i < aRows; i++)
+		for (int i = 0; i < mRows; i++)
 		{
-			for (int j = 0; j < bRows; j++)
+			for (int j = 0; j < mRows; j++)
 			{
 				double sumValue = 0;
 
-				for (int k = 0; k < aRows; k++)
+				for (int k = 0; k < mColumns; k++)
 				{
 					sumValue += pha[i][k] * phb[k][j];
 				}
@@ -73,38 +73,39 @@ public class Matrix
 			}
 		}
 
-		PrintMatrix(phc, bRows, System.currentTimeMillis() - start);
+		PrintMatrix(phc, mRows, System.currentTimeMillis() - start);
 	}
 
-	public void MultiplyLine(int aRows, int bRows)
+	public static void MultiplyLine(int mRows, int mColumns)
 	{
-		double[][] pha = initializeMatrixB(aRows);
-		double[][] phb = initializeMatrixB(bRows);
-		double[][] phc = new double[aRows][aRows];
+		double[][] pha = initializeMatrixA(mRows, mColumns);
+		double[][] phb = initializeMatrixB(mColumns, mRows);
+		double[][] phc = new double[mRows][mRows];
 
 		long start = System.currentTimeMillis();
 
-		for (int i = 0; i < aRows; i++)
+		for (int i = 0; i < mRows; i++)
 		{
-			for (int j = 0; j < bRows; j++)
+			for (int j = 0; j < mColumns; j++)
 			{
-				for (int k = 0; k < aRows; k++)
+				for (int k = 0; k < mRows; k++)
 				{
 					phc[i][k] += pha[i][j] * phb[j][k];
 				}
 			}
 		}
 
-		PrintMatrix(phc, bRows, System.currentTimeMillis() - start);
+		PrintMatrix(phc, mRows, System.currentTimeMillis() - start);
 	}
 
-	private int poolSize = Runtime.getRuntime().availableProcessors();
+	private static int poolSize = Runtime.getRuntime().availableProcessors();
 
-	public void MultiplyParallel(int aRows, int bRows)
+	public static void MultiplyParallel(int mRows, int mColumns)
 	{
-		double[][] pha = initializeMatrixB(aRows);
-		double[][] phb = initializeMatrixB(bRows);
-		double[][] phc = new double[pha.length][pha[0].length];
+		double[][] pha = initializeMatrixA(mRows, mColumns);
+		double[][] phb = initializeMatrixB(mColumns, mRows);
+		double[][] phc = new double[mRows][mRows];
+
 		final ExecutorService executor = Executors.newFixedThreadPool(poolSize);
 		final List<Future<double[][]>> list = new ArrayList<Future<double[][]>>();
 		int part = pha.length / poolSize;
@@ -118,7 +119,7 @@ public class Matrix
 
 		for (int i = 0; i < pha.length; i += part)
 		{
-			list.add(executor.submit(new DefaultMultiplier(pha, phb, i, i + part)));
+			list.add(executor.submit(new DefaultMultiplier(pha, phb, mRows, mColumns, i, i + part)));
 		}
 
 		int start = 0;
@@ -144,14 +145,15 @@ public class Matrix
 		}
 
 		executor.shutdown();
-		PrintMatrix(phc, bRows, System.currentTimeMillis() - beginTime);
+		PrintMatrix(phc, mRows, System.currentTimeMillis() - beginTime);
 	}
 
-	public void MultiplyLineParallel(int aRows, int bRows)
+	public static void MultiplyLineParallel(int mRows, int mColumns)
 	{
-		double[][] pha = initializeMatrixB(aRows);
-		double[][] phb = initializeMatrixB(bRows);
-		double[][] phc = new double[pha.length][pha[0].length];
+		double[][] CF;
+		double[][] pha = initializeMatrixA(mRows, mColumns);
+		double[][] phb = initializeMatrixB(mColumns, mRows);
+		double[][] phc = new double[mRows][mRows];
 		final ExecutorService executor = Executors.newFixedThreadPool(poolSize);
 		final List<Future<double[][]>> list = new ArrayList<Future<double[][]>>();
 		int part = pha.length / poolSize;
@@ -165,11 +167,10 @@ public class Matrix
 
 		for (int i = 0; i < pha.length; i += part)
 		{
-			list.add(executor.submit(new LineMultiplier(pha, phb, i, i + part)));
+			list.add(executor.submit(new LineMultiplier(pha, phb, mRows, mColumns, i, i + part)));
 		}
 
 		int start = 0;
-		double CF[][];
 
 		for (final Future<double[][]> future : list)
 		{
@@ -191,6 +192,6 @@ public class Matrix
 		}
 
 		executor.shutdown();
-		PrintMatrix(phc, bRows, System.currentTimeMillis() - beginTime);
+		PrintMatrix(phc, mRows, System.currentTimeMillis() - beginTime);
 	}
 }

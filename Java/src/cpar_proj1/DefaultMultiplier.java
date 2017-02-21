@@ -4,9 +4,9 @@ import java.util.concurrent.Callable;
 
 public class DefaultMultiplier extends AbstractMultiplier implements Callable<double[][]>
 {
-	public DefaultMultiplier(double[][] a, double[][] b, int s, int e)
+	public DefaultMultiplier(double[][] a, double[][] b, int r, int c, int s, int e)
 	{
-		super(a, b, s, e);
+		super(a, b, r, c, s, e);
 	}
 
 	@Override
@@ -14,11 +14,11 @@ public class DefaultMultiplier extends AbstractMultiplier implements Callable<do
 	{
 		for (int i = start; i < end; i++)
 		{
-			for (int j = 0; j < B.length; j++)
+			for (int j = 0; j < rows; j++)
 			{
 				double sumValue = 0;
 
-				for (int k = 0; k < B[0].length; k++)
+				for (int k = 0; k < columns; k++)
 				{
 					sumValue += A[i][k] * B[k][j];
 				}
