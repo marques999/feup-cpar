@@ -27,19 +27,43 @@ int askThreads()
 
 static void runBenchmark(int start, int end, int step, void(*matrixOperation)(int, int))
 {
+	long long values[2];
+
 	for (int i = start; i <= end; i += step)
 	{
+		if (PAPI_Begin() != PAPI_OK)
+		{
+			break;
+		}
+
 		std::cout << "[" << i << "x" << i << "]\n";
 		matrixOperation(i, i);
+
+		if (PAPI_Reset(values) != PAPI_OK)
+		{
+			break;
+		}
 	}
 }
 
-static void runBenchmarkOMP(int numberThreads, void(*matrixOperation)(int, int, int))
+static void runBenchmarkOMP(int start, int end, int step, int numberThreads, void(*matrixOperation)(int, int, int))
 {
-	for (int i = 600; i <= 3000; i += 400)
+	long long values[2];
+
+	for (int i = start; i <= end; i += step)
 	{
+		if (PAPI_Begin() != PAPI_OK)
+		{
+			break;
+		}
+
 		std::cout << "[" << i << "x" << i << "]\n";
 		matrixOperation(i, i, numberThreads);
+
+		if (PAPI_Reset(values) != PAPI_OK)
+		{
+			break;
+		}
 	}
 }
 
@@ -59,13 +83,14 @@ static void BenchmarkLine()
 static void BenchmarkNaiveParallel(int numberThreads)
 {
 	std::cout << "Running multi-threaded naive multiplication benchmark (" << numberThreads << " threads)...\n\n";
-	runBenchmarkOMP(numberThreads, MultiplyNaiveParallel);
+	runBenchmarkOMP(600, 3000, 400, numberThreads, MultiplyNaiveParallel);
 }
 
 static void BenchmarkLineParallel(int numberThreads)
 {
 	std::cout << "Running multi-threaded line multiplication benchmark (" << numberThreads << " threads)...\n\n";
-	runBenchmarkOMP(numberThreads, MultiplyLineParallel);
+	runBenchmarkOMP(600, 3000, 400, numberThreads, MultiplyLineParallel);
+	runBenchmarkOMP(4000, 10000, 2000, numberThreads, MultiplyLineParallel);
 }
 
 int main(int argc, char* argv[])
@@ -108,11 +133,11 @@ int main(int argc, char* argv[])
 		{
 			std::cout << "Dimensions: lins cols ? ";
 			std::cin >> mRows >> mColumns;
-		}
 
-		if (PAPI_Begin() != PAPI_OK)
-		{
-			return 1;
+			if (PAPI_Begin() != PAPI_OK)
+			{
+				return 1;
+			}
 		}
 
 		switch (op)
@@ -143,7 +168,7 @@ int main(int argc, char* argv[])
 			break;
 		}
 
-		if (PAPI_Reset(values) != PAPI_OK)
+		if (op <= 4 && PAPI_Reset(values) != PAPI_OK)
 		{
 			return 1;
 		}

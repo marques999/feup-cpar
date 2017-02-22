@@ -49,6 +49,14 @@ int PAPI_Initialize()
 		PAPI_Error(rv);
 	}
 
+	rv = PAPI_add_event(eventMask, PAPI_TOT_INS);
+
+	if (rv != PAPI_OK)
+	{
+		std::cout << "ERRO: PAPI_TOT_INS" << std::endl;
+		PAPI_Error(rv);
+	}
+
 	return rv;
 }
 
@@ -93,6 +101,7 @@ int PAPI_Reset(long long outArray[2])
 
 	std::cout << "L1 DCM: " << outArray[0] << std::endl;
 	std::cout << "L2 DCM: " << outArray[1] << std::endl;
+	std::cout << "TOTAL: " << outArray[2] << std::endl;
 	rv = PAPI_reset(eventMask);
 
 	if (rv != PAPI_OK)
