@@ -1,0 +1,20 @@
+marques999@Z170-PG:~$ papi_avail -a
+Available PAPI preset and user defined events plus hardware information.
+--------------------------------------------------------------------------------
+PAPI Version             : 5.5.1.0
+Vendor string and code   : GenuineIntel (1)
+Model string and code    : Intel(R) Core(TM) i5-6600K CPU @ 3.50GHz (94)
+CPU Revision             : 3.000000
+CPUID Info               : Family: 6  Model: 94  Stepping: 3
+CPU Max Megahertz        : 4400
+CPU Min Megahertz        : 800
+Hdw Threads per core     : 1
+Cores per Socket         : 4
+Sockets                  : 1
+NUMA Nodes               : 1
+CPUs per Node            : 4
+Total CPUs               : 4
+Running in a VM          : no
+Number Hardware Counters : 0
+Max Multiplex Counters   : 384
+--------------------------------------------------------------------------------

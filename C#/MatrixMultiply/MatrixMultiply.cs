@@ -81,6 +81,7 @@ class MatrixProduct
                     case 8:
                         Console.WriteLine("Running multi-threaded line multiplication benchmark...\n");
                         runBenchmark(600, 3000, 400, instance.MultiplyLineParallel);
+                        runBenchmark(4000, 10000, 2000, instance.MultiplyLineParallel);
                         break;
                     }
                 }

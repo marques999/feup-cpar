@@ -85,6 +85,7 @@ public class MatrixMultiply
 							case 8:
 								System.out.println("Running multi-threaded line multiplication benchmark...\n");
 								runBenchmark(600, 3000, 400, new MultiplyLineParallel());
+								runBenchmark(4000, 10000, 2000, new MultiplyLineParallel());
 								break;
 							}
 						}
