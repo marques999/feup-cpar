@@ -5,36 +5,48 @@
 #include <termios.h>
 #include <unistd.h>
 
+#include "common.h"
 #include "sequential.h"
 #include "parallel.h"
 
 const char* modeLabels[] =
-{ "Sequential", "OpenMP" };
+{
+	"Sequential", "OpenMP"
+};
 
-const char* improvementlabels[] =
-{ "BoolVector", "UnsignedChar", "NoSmallest", "BoolArray" };
+const char* algorithmSequential[] =
+{
+	"Bitwise", "BoolArray", "ExcludeOdd", "FastMarking"
+};
+
+const char* algorithmOMP[] =
+{
+	"Static", "Dynamic", "FastMarking"
+};
+
+const char** algorithmLabels[] =
+{
+	algorithmSequential, algorithmOMP
+};
+
+const int algorithmLabelsLength[] =
+{
+	NUMBER_ALGORITHMS, NUMBER_ALGORITHMS_OMP
+};
 
 int main(int argc, const char* argv[])
 {
 	unsigned modeIndex = 0;
-	unsigned improvementIndex = 0;
-	unsigned limitValue = 0;
+	unsigned maximumValue = 0;
+	unsigned algorithmIndex = 0;
 
-	static struct termios oldt, newt;
+	static struct termios oldt;
+	static struct termios newt;
 
-	/*tcgetattr gets the parameters of the current terminal
-	 STDIN_FILENO will tell tcgetattr that it should write the settings
-	 of stdin to oldt*/
 	tcgetattr(STDIN_FILENO, &oldt);
-	/*now the settings will be copied*/
 	newt = oldt;
 	newt.c_lflag &= ~ICANON;
 	newt.c_lflag &= ~ECHO;
-	/*ICANON normally takes care that one line at a time will be processed
-	 that means it will return if it sees a "\n" or an EOF or an EOL*/
-
-	 /*Those new settings will be set to STDIN
-	  TCSANOW tells tcsetattr to change attributes immediately. */
 	tcsetattr(STDIN_FILENO, TCSANOW, &newt);
 
 	while (true)
@@ -44,8 +56,8 @@ int main(int argc, const char* argv[])
 		std::cout << "| [1] Mode        | " << std::left << std::setw(14)
 			<< modeLabels[modeIndex] << " |" << std::endl;
 		std::cout << "| [2] Improvement | " << std::setw(14)
-			<< improvementlabels[improvementIndex] << " |" << std::endl;
-		std::cout << "| [3] Limit       | " << std::setw(14) << limitValue
+			<< algorithmLabels[modeIndex][algorithmIndex] << " |" << std::endl;
+		std::cout << "| [3] Limit       | " << std::setw(14) << maximumValue
 			<< " |" << std::endl;
 		printf("+-----------------+----------------+\n\n");
 		printf("Press <ENTER> to validate your options...\n");
@@ -61,13 +73,14 @@ int main(int argc, const char* argv[])
 		{
 		case '1':
 
+			algorithmIndex = 0;
 			modeIndex = (modeIndex + 1) % 2;
 
 			break;
 
 		case '2':
 
-			improvementIndex = (improvementIndex + 1) % 4;
+			algorithmIndex = (algorithmIndex + 1) % algorithmLabelsLength[modeIndex];
 
 			break;
 
@@ -84,7 +97,7 @@ int main(int argc, const char* argv[])
 					std::cin.clear();
 					std::cin.ignore(INT_MAX, '\n');
 				}
-			} while (!(std::cin >> limitValue));
+			} while (!(std::cin >> maximumValue));
 
 			tcsetattr(STDIN_FILENO, TCSANOW, &newt);
 
@@ -92,11 +105,20 @@ int main(int argc, const char* argv[])
 
 		case '\n':
 
+			if (maximumValue <= 2)
+			{
+				break;
+			}
+
 			tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
 
 			if (modeIndex == 0)
 			{
-				RunSequential(improvementIndex, limitValue);
+				RunSequential(algorithmIndex, maximumValue);
+			}
+			else if (modeIndex == 1)
+			{
+				RunParallel(algorithmIndex, maximumValue, 4);
 			}
 
 			return 0;

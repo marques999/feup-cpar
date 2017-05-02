@@ -8,6 +8,6 @@
 #ifndef SEQUENTIAL_H_
 #define SEQUENTIAL_H_
 
-void RunSequential(int improvementIndex, const uint64_t maximumValue);
+void RunSequential(int algorithmIndex, const uint64_t maximumValue);
 
 #endif /* SEQUENTIAL_H_ */

@@ -8,6 +8,6 @@
 #ifndef PARALLEL_H_
 #define PARALLEL_H_
 
-void RunParallel(const uint64_t maximumValue, int improvementIndex, int maximumThreads);
+void RunParallel(int algorithmIndex, const uint64_t maximumValue, int numberThreads);
 
 #endif /* PARALLEL_H_ */

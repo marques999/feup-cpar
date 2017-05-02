@@ -1,6 +1,23 @@
 #include "common.h"
 
-void prettyPrint(const uint64_t idx, const uint64_t v)
+static uint64_t countPrimes(const bool* v, const uint64_t sz)
+{
+	uint64_t rv = 0;
+
+	for (uint64_t i = 0; i < sz; i++)
+	{
+		if (v[i])
+		{
+			rv++;
+		}
+	}
+
+	printf("#Primes: %" PRIu64 " (", rv);
+
+	return MIN(rv, MAXIMUM_PRIMES);
+}
+
+static void prettyPrint(const uint64_t idx, const uint64_t v)
 {
 	if (idx == 1)
 	{
@@ -12,84 +29,53 @@ void prettyPrint(const uint64_t idx, const uint64_t v)
 	}
 }
 
-void printPrimes(const std::vector<bool>& v)
+void printBitwise(const uint64_t* v, const uint64_t sz)
 {
 	uint64_t rv = 0;
-	uint64_t i = v.size() - 1;
 
-	for (uint64_t i = 0; i < v.size(); i++)
+	for (uint64_t j = 1; j <= sz; j++)
 	{
-		if (v[i])
+		if (IS_PRIME(j))
 		{
-			rv++;
+			++rv;
 		}
 	}
 
 	printf("#Primes: %" PRIu64 " (", rv);
 	rv = MIN(rv, MAXIMUM_PRIMES);
 
-	while (rv > 0)
+	for (uint64_t i = sz; rv > 0; i--)
+	{
+		if (IS_PRIME(i))
+		{
+			prettyPrint(rv--, i);
+		}
+	}
+}
+
+void printEven(const bool* v, const uint64_t sz)
+{
+	uint64_t rv = countPrimes(v, sz);
+
+	for (uint64_t i = sz - 1; rv > 0; i--)
 	{
 		if (v[i])
 		{
-			prettyPrint(rv--, i + 2);
+			prettyPrint(rv--, i == 0 ? 2 : 1 + i * 2);
 		}
-
-		i--;
 	}
 }
 
 void printPrimes(const bool* v, const uint64_t sz)
 {
-	uint64_t rv = 0;
-	uint64_t i = sz - 1;
+	uint64_t rv = countPrimes(v, sz);
 
-	for (uint64_t i = 0; i < sz; i++)
-	{
-		if (v[i])
-		{
-			rv++;
-		}
-	}
-
-	printf("#Primes: %" PRIu64 " (", rv);
-	rv = MIN(rv, MAXIMUM_PRIMES);
-
-	while (rv > 0)
+	for (uint64_t i = sz - 1; rv > 0; i--)
 	{
 		if (v[i])
 		{
 			prettyPrint(rv--, i + 2);
 		}
-
-		i--;
-	}
-}
-
-void printPrimes(const uint8_t* v, const uint64_t sz)
-{
-	uint64_t rv = 0;
-	uint64_t i = sz - 1;
-
-	for (uint64_t i = 0; i < sz; i++)
-	{
-		if (v[i] == 1)
-		{
-			rv++;
-		}
-	}
-
-	printf("#Primes: %" PRIu64 " (", rv);
-	rv = MIN(rv, MAXIMUM_PRIMES);
-
-	while (rv > 0)
-	{
-		if (v[i] == 1)
-		{
-			prettyPrint(rv--, i + 2);
-		}
-
-		i--;
 	}
 }
 
