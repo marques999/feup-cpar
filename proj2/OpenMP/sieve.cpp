@@ -1,5 +1,6 @@
 #include <iomanip>
 #include <iostream>
+#include <omp.h>
 #include <termios.h>
 #include <time.h>
 #include <unistd.h>
@@ -39,6 +40,8 @@ int main(int argc, const char* argv[])
 	uint32_t modeIndex = 0;
 	uint64_t maximumValue = 0;
 	uint32_t algorithmIndex = 0;
+	uint32_t maximumThreads = omp_get_max_threads();
+	uint32_t numberThreads = maximumThreads;
 
 	static struct termios oldt;
 	static struct termios newt;
@@ -53,12 +56,15 @@ int main(int argc, const char* argv[])
 	{
 		printf("\033c");
 		printf("+-----------------+----------------+\n");
-		std::cout << "| [1] Mode        | " << std::left << std::setw(14)
-			<< modeLabels[modeIndex] << " |" << std::endl;
-		std::cout << "| [2] Improvement | " << std::setw(14)
-			<< algorithmLabels[modeIndex][algorithmIndex] << " |" << std::endl;
-		std::cout << "| [3] Limit       | " << std::setw(14) << maximumValue
-			<< " |" << std::endl;
+		std::cout << "| [1] Mode        | " << std::left << std::setw(14) << modeLabels[modeIndex] << " |" << std::endl;
+		std::cout << "| [2] Improvement | " << std::setw(14) << algorithmLabels[modeIndex][algorithmIndex] << " |" << std::endl;
+		std::cout << "| [3] Limit       | " << std::setw(14) << maximumValue << " |" << std::endl;
+
+		if (modeIndex == 1)
+		{
+			std::cout << "| [4] Threads     | " << std::setw(14) << numberThreads << " |" << std::endl;
+		}
+
 		printf("+-----------------+----------------+\n\n");
 		printf("Press <ENTER> to validate your options...\n");
 
@@ -67,7 +73,7 @@ int main(int argc, const char* argv[])
 		do
 		{
 			userInput = getchar();
-		} while (userInput != '\n' && (userInput < '1' || userInput > '3'));
+		} while (userInput != '\n' && (userInput < '1' || userInput > '4'));
 
 		switch (userInput)
 		{
@@ -103,6 +109,15 @@ int main(int argc, const char* argv[])
 
 			break;
 
+		case '4':
+
+			if (modeIndex == 1 && ++numberThreads > maximumThreads)
+			{
+				numberThreads = 1;
+			}
+
+			break;
+
 		case '\n':
 
 			if (maximumValue <= 2)
@@ -123,7 +138,7 @@ int main(int argc, const char* argv[])
 			}
 			else if (modeIndex == 1)
 			{
-				RunParallel(algorithmIndex, maximumValue, 4);
+				RunParallel(algorithmIndex, maximumValue, numberThreads);
 			}
 
 			if (PAPI_Destroy() != PAPI_OK)
