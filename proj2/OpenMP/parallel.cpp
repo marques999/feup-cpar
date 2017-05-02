@@ -1,4 +1,6 @@
 #include <omp.h>
+
+#include "papi.h"
 #include "common.h"
 
 static double runStatic(const uint64_t maximumValue, int numberThreads)
@@ -17,8 +19,13 @@ static double runStatic(const uint64_t maximumValue, int numberThreads)
 	nanoTime finish;
 	uint64_t maximumSqrt = (int)sqrt((double)maximumValue);
 
-	clock_gettime(CLOCK_MONOTONIC, &start);
 	omp_set_num_threads(numberThreads);
+	clock_gettime(CLOCK_MONOTONIC, &start);
+
+	if (PAPI_Begin() != PAPI_OK)
+	{
+		return 0.0;
+	}
 
 	#pragma omp parallel for schedule(static)
 	for (i = 3; i <= maximumSqrt; i += 2)
@@ -30,6 +37,13 @@ static double runStatic(const uint64_t maximumValue, int numberThreads)
 				v[j / 2] = false;
 			}
 		}
+	}
+
+	long long values[3];
+
+	if (PAPI_Reset(values) != PAPI_OK)
+	{
+		return 0.0;
 	}
 
 	clock_gettime(CLOCK_MONOTONIC, &finish);
@@ -54,8 +68,13 @@ static double runDynamic(const uint64_t maximumValue, int numberThreads)
 	nanoTime finish;
 	uint64_t maximumSqrt = (int)sqrt((double)maximumValue);
 
-	clock_gettime(CLOCK_MONOTONIC, &start);
 	omp_set_num_threads(numberThreads);
+	clock_gettime(CLOCK_MONOTONIC, &start);
+
+	if (PAPI_Begin() != PAPI_OK)
+	{
+		return 0.0;
+	}
 
 	#pragma omp parallel for schedule(dynamic)
 	for (i = 3; i <= maximumSqrt; i += 2)
@@ -67,6 +86,13 @@ static double runDynamic(const uint64_t maximumValue, int numberThreads)
 				v[j / 2] = false;
 			}
 		}
+	}
+
+	long long values[3];
+
+	if (PAPI_Reset(values) != PAPI_OK)
+	{
+		return 0.0;
 	}
 
 	clock_gettime(CLOCK_MONOTONIC, &finish);
@@ -94,6 +120,11 @@ static double runFastMarking(const uint64_t maximumValue, int numberThreads)
 
 	omp_set_num_threads(numberThreads);
 	clock_gettime(CLOCK_MONOTONIC, &start);
+
+	if (PAPI_Begin() != PAPI_OK)
+	{
+		return 0.0;
+	}
 
 	#pragma omp parallel for if(validateThreads >= sqrtMaximum) default(shared) private(threadId)
 	for (threadId = 0; threadId < numberThreads; threadId++)
@@ -156,6 +187,13 @@ static double runFastMarking(const uint64_t maximumValue, int numberThreads)
 
 		#pragma omp atomic
 		count += lcount;
+	}
+
+	long long values[3];
+
+	if (PAPI_Reset(values) != PAPI_OK)
+	{
+		return 0.0;
 	}
 
     clock_gettime(CLOCK_MONOTONIC, &finish);

@@ -1,4 +1,5 @@
 #include "common.h"
+#include "papi.h"
 
 static double runBitwise(const uint64_t maximumValue)
 {
@@ -29,6 +30,11 @@ static double runBitwise(const uint64_t maximumValue)
 	v[0] &= ~(1 << 1);
 	clock_gettime(CLOCK_MONOTONIC, &start);
 
+	if (PAPI_Begin() != PAPI_OK)
+	{
+		return 0.0;
+	}
+
 	for (uint64_t i = 2; i <= sqrtMaximum; ++i)
 	{
 		if (v[i >> 5] & (1 << (i & 31)))
@@ -38,6 +44,13 @@ static double runBitwise(const uint64_t maximumValue)
 				v[j >> 5] &= ~(1 << (j & 31));
 			}
 		}
+	}
+
+	long long values[3];
+
+	if (PAPI_Reset(values) != PAPI_OK)
+	{
+		return 0.0;
 	}
 
 	clock_gettime(CLOCK_MONOTONIC, &finish);
@@ -62,6 +75,11 @@ static double runBoolArray(const uint64_t maximumValue)
 
 	clock_gettime(CLOCK_MONOTONIC, &start);
 
+	if (PAPI_Begin() != PAPI_OK)
+	{
+		return 0.0;
+	}
+
 	while (k * k <= maximumValue)
 	{
 		for (uint64_t i = k * k; i <= maximumValue; i += k)
@@ -79,6 +97,13 @@ static double runBoolArray(const uint64_t maximumValue)
 		}
 
 		k = smallest;
+	}
+
+	long long values[3];
+
+	if (PAPI_Reset(values) != PAPI_OK)
+	{
+		return 0.0;
 	}
 
 	clock_gettime(CLOCK_MONOTONIC, &finish);
@@ -102,6 +127,11 @@ static double runExcludeOdd(const uint64_t maximumValue)
 
 	clock_gettime(CLOCK_MONOTONIC, &start);
 
+	if (PAPI_Begin() != PAPI_OK)
+	{
+		return 0.0;
+	}
+
 	for (uint64_t i = 3; i * i <= maximumValue; i += 2)
 	{
 		if (v[i / 2])
@@ -111,6 +141,13 @@ static double runExcludeOdd(const uint64_t maximumValue)
 				v[j / 2] = false;
 			}
 		}
+	}
+
+	long long values[3];
+
+	if (PAPI_Reset(values) != PAPI_OK)
+	{
+		return 0.0;
 	}
 
 	clock_gettime(CLOCK_MONOTONIC, &finish);
@@ -136,6 +173,11 @@ static double runFastMarking(const uint64_t maximumValue)
 	}
 
 	clock_gettime(CLOCK_MONOTONIC, &start);
+
+	if (PAPI_Begin() != PAPI_OK)
+	{
+		return 0.0;
+	}
 
 	do
 	{
@@ -168,6 +210,13 @@ static double runFastMarking(const uint64_t maximumValue)
 		k = primeIndex + 2;
 	}
 	while (k * k <= maximumValue);
+
+	long long values[3];
+
+	if (PAPI_Reset(values) != PAPI_OK)
+	{
+		return 0.0;
+	}
 
 	clock_gettime(CLOCK_MONOTONIC, &finish);
 	printPrimes(v, maximumValue);

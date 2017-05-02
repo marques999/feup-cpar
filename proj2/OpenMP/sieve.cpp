@@ -1,13 +1,13 @@
-#include <iostream>
-#include <time.h>
-#include <papi.h>
 #include <iomanip>
+#include <iostream>
 #include <termios.h>
+#include <time.h>
 #include <unistd.h>
 
 #include "common.h"
-#include "sequential.h"
+#include "papi.h"
 #include "parallel.h"
+#include "sequential.h"
 
 const char* modeLabels[] =
 {
@@ -36,9 +36,9 @@ const int algorithmLabelsLength[] =
 
 int main(int argc, const char* argv[])
 {
-	unsigned modeIndex = 0;
-	unsigned maximumValue = 0;
-	unsigned algorithmIndex = 0;
+	uint32_t modeIndex = 0;
+	uint64_t maximumValue = 0;
+	uint32_t algorithmIndex = 0;
 
 	static struct termios oldt;
 	static struct termios newt;
@@ -112,6 +112,11 @@ int main(int argc, const char* argv[])
 
 			tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
 
+			if (PAPI_Initialize() != PAPI_OK)
+			{
+				return 1;
+			}
+
 			if (modeIndex == 0)
 			{
 				RunSequential(algorithmIndex, maximumValue);
@@ -121,9 +126,12 @@ int main(int argc, const char* argv[])
 				RunParallel(algorithmIndex, maximumValue, 4);
 			}
 
+			if (PAPI_Destroy() != PAPI_OK)
+			{
+				return 1;
+			}
+
 			return 0;
 		}
 	}
-
-	return 0;
 }
