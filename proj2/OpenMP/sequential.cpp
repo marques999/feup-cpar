@@ -13,7 +13,7 @@ static double runBitwise(const uint64_t maximumValue)
 		memorySize = 1;
 	}
 
-	uint64_t* v = new uint64_t[memorySize];
+	uint32_t* v = new uint32_t[memorySize];
 
 	if (maximumValue < 32)
 	{
