@@ -126,19 +126,49 @@ static double runFastMarking(const uint64_t maximumValue, int numberThreads)
 		return 0.0;
 	}
 
-	#pragma omp parallel for if(validateThreads >= sqrtMaximum) default(shared) private(threadId)
+	bool* v = new bool[maximumValue];
+
+	memset(v, true, maximumValue);
+
+	uint64_t first = 0;
+	uint64_t low = 2 + BLOCK_LOW(threadId, numberThreads, maximumValue);
+	uint64_t high = 2 + BLOCK_HIGH(threadId, numberThreads, maximumValue);
+	uint64_t length = BLOCK_SIZE(threadId, numberThreads, maximumValue);
+
+	while(k * k <= maximumValue){
+			if(k * k < low){
+				if(low % k == 0){
+					first = low;
+				}else{
+					first = low + (k - (low % k));
+				}
+			}else{
+				first = k * k;
+			}
+
+			#pragma omp parallel for num_threads(numberThreads)
+			for(uint64_t i = first; i <= low + length ; i += k){
+				std::cout << "HEY";
+				v[i - low] = false;
+			}
+
+			std::cout << k;
+
+			if(true){
+				for(uint64_t i = k + 1 ; i < low + length ; i++){
+					if(v[i - low]){
+						k = i;
+						break;
+					}
+				}
+			}
+	}
+	/*#pragma omp parallel for if(validateThreads >= sqrtMaximum) default(shared) private(threadId)
 	for (threadId = 0; threadId < numberThreads; threadId++)
 	{
 		uint64_t first = 0;
 		uint64_t low = 2 + BLOCK_LOW(threadId, numberThreads, maximumValue);
 		uint64_t length = BLOCK_SIZE(threadId, numberThreads, maximumValue);
-
-		bool* v = new bool[maximumValue + 1];
-
-		for (uint64_t i = 0; i <= maximumValue; i++)
-		{
-			v[i] = true;
-		}
 
 		do
 		{
@@ -187,6 +217,16 @@ static double runFastMarking(const uint64_t maximumValue, int numberThreads)
 
 		#pragma omp atomic
 		count += lcount;
+	}*/
+
+	uint64_t lcount = 0;
+
+	for (uint64_t i= 0; i <= maximumValue; i++)
+	{
+		if (v[i])
+		{
+			lcount++;
+		}
 	}
 
 	long long values[3];
@@ -197,7 +237,7 @@ static double runFastMarking(const uint64_t maximumValue, int numberThreads)
 	}
 
     clock_gettime(CLOCK_MONOTONIC, &finish);
-    std::cout << count << " primes found between 2 and " << maximumValue << std::endl;
+    std::cout << lcount << " primes found between 2 and " << maximumValue << std::endl;
 
     return getElapsed(start, finish);
 }

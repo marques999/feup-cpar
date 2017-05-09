@@ -14,6 +14,7 @@
 #include <time.h>
 #include <iostream>
 #include <vector>
+#include <string.h>
 
 #define NUMBER_ALGORITHMS		4
 #define NUMBER_ALGORITHMS_OMP	3
