@@ -29,7 +29,7 @@ static void prettyPrint(const uint64_t idx, const uint64_t v)
 	}
 }
 
-void printBitwise(const uint64_t* v, const uint64_t sz)
+void printBitwise(const uint32_t* v, const uint64_t sz)
 {
 	uint64_t rv = 0;
 

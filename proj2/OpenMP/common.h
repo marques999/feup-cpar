@@ -33,7 +33,7 @@ typedef double(*ParallelFunction)(const uint64_t maximumValue, int maximumThread
 
 void printEven(const bool* v, const uint64_t sz);
 void printPrimes(const bool* v, const uint64_t sz);
-void printBitwise(const uint64_t* v, const uint64_t sz);
+void printBitwise(const uint32_t* v, const uint64_t sz);
 
 double getElapsed(nanoTime start, nanoTime finish);
 
