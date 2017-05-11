@@ -1,166 +1,223 @@
 #include "common.h"
 
-void sieveSequential(uint64_t power, ofstream& out) {
-	int rank, size;
-	double openMPITime = 0;
-	bool* list;
-	uint64_t startBlockValue, counter = 0, primes = 0, n = pow(2, power);
+void sieveSequential(uint64_t maximumPower, ofstream& out)
+{
+	int clusterRank;
+	int clusterSize;
+	double executionTime = 0;
 
-	MPI_Comm_size(MPI_COMM_WORLD, &size);
-	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+	MPI_Comm_size(MPI_COMM_WORLD, &clusterSize);
+	MPI_Comm_rank(MPI_COMM_WORLD, &clusterRank);
 
-	uint64_t blockSize = BLOCK_SIZE(rank, n - 1, size);
-	uint64_t bottom = BLOCK_LOW(rank, n - 1, size) + 2;
-	uint64_t upper = BLOCK_HIGH(rank, n - 1, size) + 2;
+	uint64_t startIndex;
+	uint64_t maximumValue = pow(2, maximumPower);
+	uint64_t blockSize = BLOCK_SIZE(clusterRank, maximumValue - 1, clusterSize);
+	uint64_t lowerIndex = BLOCK_LOW(clusterRank, maximumValue - 1, clusterSize) + 2;
+	uint64_t upperIndex = BLOCK_HIGH(clusterRank, maximumValue - 1, clusterSize) + 2;
 
-	list = newList(blockSize);
+	bool* v = newList(blockSize);
 
-	MPI_Barrier (MPI_COMM_WORLD);
+	MPI_Barrier(MPI_COMM_WORLD);
 
-	if(rank == 0) {
-		out << size << ";" << n << ";" << power << ";";
-		openMPITime = -MPI_Wtime();
+	if (clusterRank == 0)
+	{
+		out << clusterSize << ";" << maximumValue << ";" << maximumPower << ";";
+		executionTime = -MPI_Wtime();
 	}
 
-	uint64_t p = 2;
-	while(p * p <= n) {
+	uint64_t currentValue = 2;
+	uint64_t localCount = 0;
+	uint64_t numberPrimes = 0;
 
-		if ( (p * p) < bottom) {
-			if(bottom % p == 0){
-				startBlockValue = bottom;
-			} else {
-				startBlockValue = bottom + (p - (bottom % p));
+	while (currentValue * currentValue <= maximumValue)
+	{
+		if ((currentValue * currentValue) < lowerIndex)
+		{
+			if (lowerIndex % currentValue == 0)
+			{
+				startIndex = lowerIndex;
 			}
-		} else {
-			startBlockValue = p * p;
+			else
+			{
+				startIndex = lowerIndex + (currentValue - (lowerIndex % currentValue));
+			}
 		}
-		for (uint64_t i = startBlockValue; i <= upper; i += p)
-			list[i - bottom] = false;
+		else
+		{
+			startIndex = currentValue * currentValue;
+		}
 
-		if (rank == 0) {
-			for(uint64_t i = p + 1; i < upper; i++) {
-				if (list[i - bottom]) {
-					p = i;
+		for (uint64_t i = startIndex; i <= upperIndex; i += currentValue)
+		{
+			v[i - lowerIndex] = false;
+		}
+
+		if (clusterRank == 0)
+		{
+			for (uint64_t i = currentValue + 1; i < upperIndex; i++)
+			{
+				if (v[i - lowerIndex])
+				{
+					currentValue = i;
 					break;
 				}
 			}
 		}
 
-		MPI_Bcast(&p, 1, MPI_LONG, 0, MPI_COMM_WORLD);
+		MPI_Bcast(&currentValue, 1, MPI_LONG, 0, MPI_COMM_WORLD);
 	}
 
-	if(rank == 0) {
-		openMPITime += MPI_Wtime();
-		out << openMPITime << ";";
+	if (clusterRank == 0)
+	{
+		executionTime += MPI_Wtime();
+		out << executionTime << ";";
 	}
 
 	for (uint64_t i = 0; i < blockSize; i++)
-		if (list[i])
-			counter++;
-
-	if (size > 1)
-		MPI_Reduce(&counter, &primes, 1, MPI_LONG, MPI_SUM, 0, MPI_COMM_WORLD);
-	else
-		primes = counter;
-
-	if(rank == 0)
-		out << primes << endl;
-
-	free(list);
-}
-
-void sieveParallel(unsigned long power, int threads, ofstream& out) {
-	int rank, size;
-	double openMPITime = 0;
-	bool* list;
-	uint64_t startBlockValue, counter = 0, primes = 0, n = pow(2, power);
-
-	omp_set_num_threads(threads);
-
-	MPI_Comm_size(MPI_COMM_WORLD, &size);
-	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-
-	uint64_t blockSize = BLOCK_SIZE(rank, n - 1, size);
-	uint64_t bottom = BLOCK_LOW(rank, n - 1, size) + 2;
-	uint64_t upper = BLOCK_HIGH(rank, n - 1, size) + 2;
-
-	list = newList(blockSize);
-
-	MPI_Barrier (MPI_COMM_WORLD);
-
-	if (rank == 0) {
-		out << size << ";" << n << ";" << power << ";" << threads << ";";
-		openMPITime = -MPI_Wtime();
+	{
+		if (v[i])
+		{
+			localCount++;
+		}
 	}
 
-	uint64_t p = 2;
-	while( (p * p) <= n) {
-		if ( (p * p) < bottom) {
-			if(bottom % p == 0){
-				startBlockValue = bottom;
-			} else {
-				startBlockValue = bottom + (p - (bottom % p));
+	if (clusterSize > 1)
+	{
+		MPI_Reduce(&localCount, &numberPrimes, 1, MPI_LONG, MPI_SUM, 0, MPI_COMM_WORLD);
+	}
+	else
+	{
+		numberPrimes = localCount;
+	}
+
+	if (clusterRank == 0)
+	{
+		out << numberPrimes << endl;
+	}
+
+	free(v);
+}
+
+void sieveParallel(uint64_t maximumPower, int numberThreads, ofstream& out)
+{
+	int clusterRank, clusterSize;
+	double executionTime = 0;
+
+	uint64_t startIndex, localCount = 0, primeCount = 0, maximumValue = pow(2, maximumPower);
+
+	if (numberThreads > omp_get_max_threads())
+	{
+		numberThreads = omp_get_max_threads();
+	}
+
+	MPI_Comm_size(MPI_COMM_WORLD, &clusterSize);
+	MPI_Comm_rank(MPI_COMM_WORLD, &clusterRank);
+
+	uint64_t blockSize = BLOCK_SIZE(clusterRank, maximumValue - 1, clusterSize);
+	uint64_t lowerIndex = BLOCK_LOW(clusterRank, maximumValue - 1, clusterSize) + 2;
+	uint64_t upperIndex = BLOCK_HIGH(clusterRank, maximumValue - 1, clusterSize) + 2;
+
+	bool* v = newList(blockSize);
+
+	MPI_Barrier(MPI_COMM_WORLD);
+
+	if (clusterRank == 0)
+	{
+		out << clusterSize << ";" << maximumValue << ";" << maximumPower << ";" << numberThreads << ";";
+		executionTime = -MPI_Wtime();
+	}
+
+	uint64_t currentValue = 2;
+
+	while ((currentValue * currentValue) <= maximumValue)
+	{
+		if ((currentValue * currentValue) < lowerIndex)
+		{
+			if (lowerIndex % currentValue == 0)
+			{
+				startIndex = lowerIndex;
 			}
-		} else {
-			startBlockValue = p * p;
+			else
+			{
+				startIndex = lowerIndex + (currentValue - (lowerIndex % currentValue));
+			}
+		}
+		else
+		{
+			startIndex = currentValue * currentValue;
 		}
 
-#pragma omp parallel for num_threads(threads)
-		for (uint64_t i = startBlockValue; i <= upper; i += p)
-			list[i - bottom] = false;
+		#pragma omp parallel for num_threads(threads)
+		for (uint64_t i = startIndex; i <= upperIndex; i += currentValue)
+		{
+			v[i - lowerIndex] = false;
+		}
 
-		if (rank == 0) {
-			for(uint64_t i = p + 1; i < upper; i++) {
-				if (list[i - bottom]) {
-					p = i;
+		if (clusterRank == 0)
+		{
+			for (uint64_t i = currentValue + 1; i < upperIndex; i++)
+			{
+				if (v[i - lowerIndex])
+				{
+					currentValue = i;
 					break;
 				}
 			}
 		}
 
-		MPI_Bcast(&p, 1, MPI_LONG, 0, MPI_COMM_WORLD);
+		MPI_Bcast(&currentValue, 1, MPI_LONG, 0, MPI_COMM_WORLD);
 	}
 
-	if (rank == 0) {
-		openMPITime += MPI_Wtime();
-		out << openMPITime << ";";
+	if (clusterRank == 0)
+	{
+		executionTime += MPI_Wtime();
+		out << executionTime << ";";
 	}
 
 	for (uint64_t i = 0; i < blockSize; i++)
-		if (list[i])
-			counter++;
+	{
+		if (v[i])
+		{
+			localCount++;
+		}
+	}
 
-	if (size > 1)
-		MPI_Reduce(&counter, &primes, 1, MPI_LONG, MPI_SUM, 0, MPI_COMM_WORLD);
+	if (clusterSize > 1)
+	{
+		MPI_Reduce(&localCount, &primeCount, 1, MPI_LONG, MPI_SUM, 0, MPI_COMM_WORLD);
+	}
 	else
-		primes = counter;
+	{
+		primeCount = localCount;
+	}
 
-	if(rank == 0)
-		out << primes << endl;
+	if (clusterRank == 0)
+	{
+		out << primeCount << endl;
+	}
 
-	free(list);
+	free(v);
 }
 
-int main(int argc, char** argv) {
-
+int main(int argc, char** argv)
+{
 	ofstream out;
+	uint64_t maximumPower = (uint64_t) atol(argv[1]);
 
 	MPI_Init(&argc, &argv);
 
-	uint64_t n = (uint64_t) atol(argv[1]);
-
-	if(argv[2]){
-	  out.open ("mpiparallel.csv", ios::app);
-		int threads = (int) atoi(argv[2]);
-		sieveParallel(n, threads, out);
+	if (argc > 2)
+	{
+		out.open("mpi-parallel.csv", ios::app);
+		sieveParallel(maximumPower, (int) atoi(argv[2]), out);
 	}
-	else{
-		out.open ("mpisequential.csv", ios::app);
-		sieveSequential(n, out);
+	else
+	{
+		out.open("mpi-sequential.csv", ios::app);
+		sieveSequential(maximumPower, out);
 	}
 
 	MPI_Finalize();
-
 	out.close();
 
 	return 0;

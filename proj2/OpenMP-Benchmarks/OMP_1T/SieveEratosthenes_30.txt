@@ -14,7 +14,7 @@ Elapsed: 2.927 seconds
 
 +-----------------+----------------+
 | [1] Mode        | OpenMP         |
-| [2] Improvement | Dynamic        |
+| [2] Improvement | SkipEven       |
 | [3] Limit       | 1073741824     |
 | [4] Threads     | 1              |
 +-----------------+----------------+
