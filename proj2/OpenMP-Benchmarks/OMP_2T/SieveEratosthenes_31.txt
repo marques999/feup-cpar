@@ -1,6 +1,6 @@
 +-----------------+----------------+
 | [1] Mode        | OpenMP         |
-| [2] Improvement | Static         |
+| [2] Improvement | FastMarking    |
 | [3] Limit       | 2147483648     |
 | [4] Threads     | 2              |
 +-----------------+----------------+
