@@ -17,7 +17,7 @@
 #include <string.h>
 
 #define NUMBER_ALGORITHMS		4
-#define NUMBER_ALGORITHMS_OMP	3
+#define NUMBER_ALGORITHMS_OMP	2
 #define MAXIMUM_PRIMES			16
 
 #define MIN(a,b) 				(((a)<(b))?(a):(b))

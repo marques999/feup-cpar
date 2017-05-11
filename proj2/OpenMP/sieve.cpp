@@ -17,12 +17,12 @@ const char* modeLabels[] =
 
 const char* algorithmSequential[] =
 {
-	"Bitwise", "BoolArray", "ExcludeOdd", "FastMarking"
+	"Bitwise", "BoolArray", "SkipEven", "FastMarking"
 };
 
 const char* algorithmOMP[] =
 {
-	"Static", "Dynamic", "FastMarking"
+	"SkipEven", "FastMarking"
 };
 
 const char** algorithmLabels[] =

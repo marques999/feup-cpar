@@ -1,7 +1,7 @@
 #include "common.h"
 #include "papi.h"
 
-static double runBitwise(const uint64_t maximumValue)
+static double Sequential_Bitwise(const uint64_t maximumValue)
 {
 	nanoTime start;
 	nanoTime finish;
@@ -21,19 +21,17 @@ static double runBitwise(const uint64_t maximumValue)
 	}
 	else
 	{
-		for (uint64_t i = 0; i < memorySize; ++i)
-		{
-			v[i] = 0xffffffff;
-		}
+		memset(v, ~0, memorySize * sizeof(v[0]));
 	}
 
 	v[0] &= ~(1 << 1);
-	clock_gettime(CLOCK_MONOTONIC, &start);
 
 	if (PAPI_Begin() != PAPI_OK)
 	{
 		return 0.0;
 	}
+
+	clock_gettime(CLOCK_MONOTONIC, &start);
 
 	for (uint64_t i = 2; i <= sqrtMaximum; ++i)
 	{
@@ -46,6 +44,8 @@ static double runBitwise(const uint64_t maximumValue)
 		}
 	}
 
+	clock_gettime(CLOCK_MONOTONIC, &finish);
+
 	long long values[3];
 
 	if (PAPI_Reset(values) != PAPI_OK)
@@ -53,32 +53,28 @@ static double runBitwise(const uint64_t maximumValue)
 		return 0.0;
 	}
 
-	clock_gettime(CLOCK_MONOTONIC, &finish);
 	printBitwise(v, maximumValue);
 
 	return getElapsed(start, finish);
 }
 
-static double runBoolArray(const uint64_t maximumValue)
+static double Sequential_BoolArray(const uint64_t maximumValue)
 {
-	bool* v = new bool[maximumValue - 1];
-
-	for (uint64_t i = 0; i < maximumValue - 1; ++i)
-	{
-		v[i] = true;
-	}
-
+	uint64_t k = 2;
 	nanoTime start;
 	nanoTime finish;
-	uint64_t k = 2;
-	uint64_t smallest = 3;
+	uint64_t primeIndex = 3;
 
-	clock_gettime(CLOCK_MONOTONIC, &start);
+	bool* v = new bool[maximumValue - 1];
+
+	memset(v, true, maximumValue - 1);
 
 	if (PAPI_Begin() != PAPI_OK)
 	{
 		return 0.0;
 	}
+
+	clock_gettime(CLOCK_MONOTONIC, &start);
 
 	while (k * k <= maximumValue)
 	{
@@ -91,13 +87,15 @@ static double runBoolArray(const uint64_t maximumValue)
 		{
 			if (v[i - 2])
 			{
-				smallest = i;
+				primeIndex = i;
 				break;
 			}
 		}
 
-		k = smallest;
+		k = primeIndex;
 	}
+
+	clock_gettime(CLOCK_MONOTONIC, &finish);
 
 	long long values[3];
 
@@ -106,31 +104,27 @@ static double runBoolArray(const uint64_t maximumValue)
 		return 0.0;
 	}
 
-	clock_gettime(CLOCK_MONOTONIC, &finish);
 	printPrimes(v, maximumValue - 1);
 
 	return getElapsed(start, finish);
 }
 
-static double runExcludeOdd(const uint64_t maximumValue)
+static double Sequential_SkipEven(const uint64_t maximumValue)
 {
-	const uint64_t memorySize = (maximumValue - 1) / 2;
-	bool* v = new bool[memorySize + 1];
-
-	for (uint64_t i = 0; i <= memorySize; ++i)
-	{
-		v[i] = true;
-	}
-
 	nanoTime start;
 	nanoTime finish;
+	uint64_t memorySize = (maximumValue - 1) / 2;
 
-	clock_gettime(CLOCK_MONOTONIC, &start);
+	bool* v = new bool[memorySize + 1];
+
+	memset(v, true, memorySize + 1);
 
 	if (PAPI_Begin() != PAPI_OK)
 	{
 		return 0.0;
 	}
+
+	clock_gettime(CLOCK_MONOTONIC, &start);
 
 	for (uint64_t i = 3; i * i <= maximumValue; i += 2)
 	{
@@ -143,6 +137,8 @@ static double runExcludeOdd(const uint64_t maximumValue)
 		}
 	}
 
+	clock_gettime(CLOCK_MONOTONIC, &finish);
+
 	long long values[3];
 
 	if (PAPI_Reset(values) != PAPI_OK)
@@ -150,55 +146,51 @@ static double runExcludeOdd(const uint64_t maximumValue)
 		return 0.0;
 	}
 
-	clock_gettime(CLOCK_MONOTONIC, &finish);
 	printEven(v, memorySize + 1);
 
 	return getElapsed(start, finish);
 }
 
-static double runFastMarking(const uint64_t maximumValue)
+static double Sequential_FastMarking(const uint64_t maximumValue)
 {
 	uint64_t k = 2;
 	nanoTime start;
 	nanoTime finish;
-	uint64_t lowValue = 2;
+	uint64_t lowerBound = 2;
 	uint64_t primeIndex = 0;
-	uint64_t firstIndex = 0;
+	uint64_t firstValue = 0;
 
 	bool* v = new bool[maximumValue + 1];
 
-	for (uint64_t i = 0; i <= maximumValue; ++i)
-	{
-		v[i] = true;
-	}
-
-	clock_gettime(CLOCK_MONOTONIC, &start);
+	memset(v, true, maximumValue + 1);
 
 	if (PAPI_Begin() != PAPI_OK)
 	{
 		return 0.0;
 	}
 
+	clock_gettime(CLOCK_MONOTONIC, &start);
+
 	do
 	{
-		if (k > lowValue)
+		if (k > lowerBound)
 		{
-			firstIndex = k - lowValue + k;
+			firstValue = k - lowerBound + k;
 		}
-		else if (k * k > lowValue)
+		else if (k * k > lowerBound)
 		{
-			firstIndex = k * k - lowValue;
+			firstValue = k * k - lowerBound;
 		}
-		else if (lowValue % k == 0)
+		else if (lowerBound % k == 0)
 		{
-			firstIndex = 0;
+			firstValue = 0;
 		}
 		else
 		{
-			firstIndex = k - (lowValue % k);
+			firstValue = k - (lowerBound % k);
 		}
 
-		for (uint64_t i = firstIndex; i <= maximumValue; i += k)
+		for (uint64_t i = firstValue; i <= maximumValue; i += k)
 		{
 			v[i] = false;
 		}
@@ -208,8 +200,9 @@ static double runFastMarking(const uint64_t maximumValue)
 		}
 
 		k = primeIndex + 2;
-	}
-	while (k * k <= maximumValue);
+	} while (k * k <= maximumValue);
+
+	clock_gettime(CLOCK_MONOTONIC, &finish);
 
 	long long values[3];
 
@@ -218,7 +211,6 @@ static double runFastMarking(const uint64_t maximumValue)
 		return 0.0;
 	}
 
-	clock_gettime(CLOCK_MONOTONIC, &finish);
 	printPrimes(v, maximumValue);
 
 	return getElapsed(start, finish);
@@ -226,10 +218,10 @@ static double runFastMarking(const uint64_t maximumValue)
 
 static const SequentialFunction functionPointers[NUMBER_ALGORITHMS] =
 {
-	runBitwise,
-	runBoolArray,
-	runExcludeOdd,
-	runFastMarking
+	Sequential_Bitwise,
+	Sequential_BoolArray,
+	Sequential_SkipEven,
+	Sequential_FastMarking
 };
 
 void RunSequential(int algorithmIndex, const uint64_t maximumValue)
