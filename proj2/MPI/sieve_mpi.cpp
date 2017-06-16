@@ -39,13 +39,11 @@ void sieveSequential(uint64_t maximumPower)
 {
 	int clusterRank;
 	int clusterSize;;
+	double executionTime = 0.0;
 
-	MPI_Barrier(MPI_COMM_WORLD);
 	MPI_Comm_size(MPI_COMM_WORLD, &clusterSize);
 	MPI_Comm_rank(MPI_COMM_WORLD, &clusterRank);
 
-	nanoTime start;
-	nanoTime finish;
 	uint64_t startIndex;
 	uint64_t localCount = 0;
 	uint64_t primeCount = 1;
@@ -56,6 +54,12 @@ void sieveSequential(uint64_t maximumPower)
 	uint64_t blockSize = BLOCK_SIZE(clusterRank, maximumValue - 1, clusterSize);
 	uint64_t lowerBound = 2 + BLOCK_LOW(clusterRank,  maximumValue - 1, clusterSize);
 	uint64_t upperBound = 2 + BLOCK_HIGH(clusterRank, maximumValue - 1, clusterSize);
+	uint64_t validateBlocks = 2 + (maximumValue - 1) / clusterSize;
+
+	if (validateBlocks < (uint64_t)sqrt((double)maximumValue))
+	{
+		return;
+	}
 
 	if (lowerBound % 2 == 0)
 	{
@@ -81,13 +85,6 @@ void sieveSequential(uint64_t maximumPower)
 		blockSize = (uint64_t)ceil((double)blockSize / 2.0);
 	}
 
-	uint64_t validateBlocks = 2 + (maximumValue - 1) / clusterSize;
-
-	if (validateBlocks < (uint64_t)sqrt((double)maximumValue))
-	{
-		return;
-	}
-
 	bool* v = initializeArray(blockSize);
 
 	if (v == NULL)
@@ -95,11 +92,13 @@ void sieveSequential(uint64_t maximumPower)
 		return;
 	}
 
+	MPI_Barrier(MPI_COMM_WORLD);
+
 	if (clusterRank == 0)
 	{
 		startIndex = 0;
 		out << clusterSize << ";" << maximumValue << ";" << maximumPower << ";";
-		clock_gettime(CLOCK_MONOTONIC, &start);
+		executionTime = -MPI_Wtime();
 	}
 
 	do
@@ -143,12 +142,9 @@ void sieveSequential(uint64_t maximumPower)
 		MPI_Bcast(&currentValue, 1, MPI_LONG, 0, MPI_COMM_WORLD);
 	} while (currentValue * currentValue <= maximumValue);
 
-	double executionTime = 0.0;
-
 	if (clusterRank == 0)
 	{
-		clock_gettime(CLOCK_MONOTONIC, &finish);
-		executionTime = getElapsed(start, finish);
+		executionTime += MPI_Wtime();
 		out << executionTime << ";";
 	}
 
@@ -194,7 +190,6 @@ void sieveParallel(uint64_t maximumPower, int numberThreads)
 		numberThreads = omp_get_max_threads();
 	}
 
-	MPI_Barrier(MPI_COMM_WORLD);
 	omp_set_num_threads(numberThreads);
 	MPI_Comm_size(MPI_COMM_WORLD, &clusterSize);
 	MPI_Comm_rank(MPI_COMM_WORLD, &clusterRank);
@@ -211,6 +206,12 @@ void sieveParallel(uint64_t maximumPower, int numberThreads)
 	uint64_t blockSize = BLOCK_SIZE(clusterRank, maximumValue - 1, clusterSize);
 	uint64_t lowerBound = 2 + BLOCK_LOW(clusterRank,  maximumValue - 1, clusterSize);
 	uint64_t upperBound = 2 + BLOCK_HIGH(clusterRank, maximumValue - 1, clusterSize);
+	uint64_t validateBlocks = 2 + (maximumValue - 1) / clusterSize;
+
+	if (validateBlocks < (uint64_t)sqrt((double)maximumValue))
+	{
+		return;
+	}
 
 	if (lowerBound % 2 == 0)
 	{
@@ -236,19 +237,14 @@ void sieveParallel(uint64_t maximumPower, int numberThreads)
 		blockSize = (uint64_t)ceil((double)blockSize / 2.0);
 	}
 
-	uint64_t validateBlocks = 2 + (maximumValue - 1) / clusterSize;
-
-	if (validateBlocks < (uint64_t)sqrt((double)maximumValue))
-	{
-		return;
-	}
-
 	bool* v = initializeArray(blockSize);
 
 	if (v == NULL)
 	{
 		return;
 	}
+
+	MPI_Barrier(MPI_COMM_WORLD);
 
 	if (clusterRank == 0)
 	{

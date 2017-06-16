@@ -1,0 +1,73 @@
+-np 1 sieve_mpi 28
+
+#Primes: 14630843
+Elapsed: 2.727 seconds
+
+-np 2 sieve_mpi 28
+
+#Primes: 14630843
+Elapsed: 2.188 seconds
+
+-np 4 sieve_mpi 28
+
+#Primes: 14630842
+Elapsed: 2.131 seconds
+
+-np 6 sieve_mpi 28
+
+#Primes: 14630842
+Elapsed: 1.391 seconds
+
+-np 8 sieve_mpi 28
+
+#Primes: 14630842
+Elapsed: 1.019 seconds
+
+--------------------------------------
+
+-np 1 sieve_mpi 29
+
+#Primes: 28192750
+Elapsed: 2.618 seconds
+
+-np 2 sieve_mpi 29
+
+#Primes: 28192749
+Elapsed: 2.417 seconds
+
+-np 4 sieve_mpi 29
+
+#Primes: 28192749
+Elapsed: 2.151 seconds
+
+-np 6 sieve_mpi 29
+
+#Primes: 28192749
+Elapsed: 2.399 seconds
+
+-np 8 sieve_mpi 29
+
+#Primes: 28192749
+Elapsed: 2.242 seconds
+
+----------------------------------
+
+-np 1 sieve_mpi 30
+#Primes: 54400028
+Elapsed: 4.129 seconds
+
+-np 2 sieve_mpi 30
+#Primes: 54400027
+Elapsed: 5.852 seconds
+
+-np 4 sieve_mpi 30
+#Primes: 54400027
+Elapsed: 5.438 seconds
+
+-np 6 sieve_mpi 30
+#Primes: 54400027
+Elapsed: 5.936 seconds
+
+np 8 sieve_mpi 30
+#Primes: 54400027
+Elapsed: 5.554 seconds
